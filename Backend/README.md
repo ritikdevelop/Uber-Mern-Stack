@@ -191,3 +191,99 @@ Example (password mismatch):
 - Validations are performed on the input.
 - On success, it returns user info and a JWT token.
 - On failure, it returns appropriate error messages and status codes 400 or 401.
+
+
+# User Profile Endpoint Documentation
+
+## Endpoint: GET /users/profile
+
+### Description
+This endpoint retrieves the profile information of the authenticated user. It requires a valid authentication token to access the user's data.
+
+### Authentication
+- **Required**: Yes
+- **Method**: Bearer token in the Authorization header or token in cookies
+- **Format**: `Authorization: Bearer <token>` or `token=<token>` in cookies
+
+### Request
+- **Method**: GET
+- **URL**: `/users/profile`
+- **Headers**:
+  - `Authorization: Bearer <JWT_TOKEN>` (optional if token is in cookies)
+- **Body**: None required
+
+### Response
+#### Success (200 OK)
+- **Status Code**: 200
+- **Content-Type**: application/json
+- **Body**:
+  ```json
+  {
+    "_id": "user_id",
+    "fullname": {
+      "firstname": "John",
+      "lastname": "Doe"
+    },
+    "email": "john.doe@example.com",
+    "socketId": "socket_id"
+  }
+  ```
+
+#### Error (401 Unauthorized)
+- **Status Code**: 401
+- **Content-Type**: application/json
+- **Body**:
+  ```json
+  {
+    "message": "Unauthorized"
+  }
+  ```
+
+### Notes
+- The password field is not included in the response for security reasons.
+- The endpoint uses JWT authentication to verify the user's identity.
+- If the token is blacklisted (e.g., after logout), access will be denied.
+
+
+# Logout Endpoint Documentation
+
+## Endpoint
+`GET /users/logout`
+
+## Description
+This endpoint logs out the authenticated user by clearing the authentication token from the cookies and blacklisting the token to prevent its further use. The user will no longer be able to access protected routes until they log in again.
+
+## Authentication
+- **Required**: The request must include a valid JWT token for authentication.
+- The token can be provided in one of the following ways:
+  - **Cookies**: Include a `token` cookie containing the JWT token.
+  - **Headers**: Include an `Authorization` header with the value `Bearer <jwt_token>`.
+
+If no valid token is provided or the token is blacklisted, the request will be rejected with a 401 Unauthorized status.
+
+## Request
+- **Method**: GET
+- **URL**: `/users/logout`
+- **Headers** (optional if using cookies):
+  - `Authorization: Bearer <jwt_token>`
+- **Cookies** (optional if using headers):
+  - `token=<jwt_token>`
+- **Body**: No request body is required or accepted for this endpoint.
+
+## Response
+- **Status Code**: 200 OK
+- **Body**:
+  ```json
+  {
+    "message": "Logged out"
+  }
+  ```
+- **Cookies**: The `token` cookie will be cleared (set to expire immediately).
+
+## Error Responses
+- **401 Unauthorized**: If no token is provided, the token is invalid, or the token is blacklisted.
+  - Body: `{"message": "Unauthorized"}`
+
+## Notes
+- This endpoint uses the `authUser` middleware to verify the user's authentication before processing the logout.
+- The token is added to a blacklist to ensure it cannot be reused, enhancing security.
